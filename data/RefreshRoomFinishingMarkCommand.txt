@@ -1,3 +1,3 @@
 Обновить марки\nотделки помещений
-Обновляет значение параметров для марки типов отделки помещений
+Переносит значение ключей типов отделки в марку отделки помещений
 https://docs.google.com/document/d/1lxJeOdmZxhACgsct88r_UWiiWBD9gqzMm24bqbhBtYk/edit?usp=sharing
