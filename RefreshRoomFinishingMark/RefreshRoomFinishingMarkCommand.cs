@@ -15,6 +15,13 @@ namespace RefreshRoomFinishingMark
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             Document doc = commandData.Application.ActiveUIDocument.Document;
+            int.TryParse(commandData.Application.Application.VersionNumber, out int versionNumber);
+            if (versionNumber >= 2022)
+            {
+                TaskDialog.Show("Revit", "Начиная с версии Revit 2022 в ключевых спецификациях можно использовать Общие параметры! Данный плагин не нужен! Обратитесь к инструкции для получения разъяснений!");
+                //return Result.Cancelled;
+            }
+
             Room roomFromParam = new FilteredElementCollector(doc)
                 .WhereElementIsNotElementType()
                 .OfClass(typeof(SpatialElement))
