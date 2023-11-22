@@ -3,9 +3,9 @@ using Autodesk.Revit.DB.Architecture;
 using Autodesk.Revit.UI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 
 namespace RefreshRoomFinishingMark
 {
@@ -14,6 +14,12 @@ namespace RefreshRoomFinishingMark
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
+            try
+            {
+                GetPluginStartInfo();
+            }
+            catch { }
+
             Document doc = commandData.Application.ActiveUIDocument.Document;
             int.TryParse(commandData.Application.Application.VersionNumber, out int versionNumber);
             if (versionNumber >= 2022)
@@ -38,7 +44,7 @@ namespace RefreshRoomFinishingMark
             //АР_ТипПола_Плагин
             Guid floorTypePluginParamGUID = new Guid("34eac6db-112c-49fc-a3dc-7e3470b9656f");
             Parameter floorTypePluginParam = roomFromParam.get_Parameter(floorTypePluginParamGUID);
-            if(floorTypePluginParam == null)
+            if (floorTypePluginParam == null)
             {
                 TaskDialog.Show("Revit", "В проекте отсутствует параметр \"АР_ТипПола_Плагин\"!");
                 return Result.Cancelled;
@@ -104,7 +110,7 @@ namespace RefreshRoomFinishingMark
                 .Cast<Room>()
                 .Where(r => r.Area > 0)
                 .ToList();
-            using(Transaction t = new Transaction(doc))
+            using (Transaction t = new Transaction(doc))
             {
                 t.Start("Обновление марок помещений");
                 foreach (Room room in roomList)
@@ -118,7 +124,7 @@ namespace RefreshRoomFinishingMark
                         room.get_Parameter(floorTypePluginParamGUID).Set(room.LookupParameter("АР_ТипПола_Ключ").AsValueString());
                     }
 
-                    if(room.LookupParameter("АР_ОтделкаСтен_Ключ").AsElementId().IntegerValue == -1)
+                    if (room.LookupParameter("АР_ОтделкаСтен_Ключ").AsElementId().IntegerValue == -1)
                     {
                         room.get_Parameter(wallFinishPluginParamGUID).Set("");
                     }
@@ -127,7 +133,7 @@ namespace RefreshRoomFinishingMark
                         room.get_Parameter(wallFinishPluginParamGUID).Set(room.LookupParameter("АР_ОтделкаСтен_Ключ").AsValueString());
                     }
 
-                    if(room.LookupParameter("АР_ОтделкаСтенСнизу_Ключ").AsElementId().IntegerValue == -1)
+                    if (room.LookupParameter("АР_ОтделкаСтенСнизу_Ключ").AsElementId().IntegerValue == -1)
                     {
                         room.get_Parameter(bottomWallFinishPluginParamGUID).Set("");
                     }
@@ -135,8 +141,8 @@ namespace RefreshRoomFinishingMark
                     {
                         room.get_Parameter(bottomWallFinishPluginParamGUID).Set(room.LookupParameter("АР_ОтделкаСтенСнизу_Ключ").AsValueString());
                     }
-                    
-                    if(room.LookupParameter("АР_ОтделкаПотолка_Ключ").AsElementId().IntegerValue == -1)
+
+                    if (room.LookupParameter("АР_ОтделкаПотолка_Ключ").AsElementId().IntegerValue == -1)
                     {
                         room.get_Parameter(ceilingFinishPluginParamGUID).Set("");
                     }
@@ -148,8 +154,29 @@ namespace RefreshRoomFinishingMark
                 t.Commit();
             }
 
-            TaskDialog.Show("Revit","Обработка завершена!");
+            TaskDialog.Show("Revit", "Обработка завершена!");
             return Result.Succeeded;
+        }
+        private static void GetPluginStartInfo()
+        {
+            // Получаем сборку, в которой выполняется текущий код
+            Assembly thisAssembly = Assembly.GetExecutingAssembly();
+            string assemblyName = "RefreshRoomFinishingMark";
+            string assemblyNameRus = "Обновить марки отделки";
+            string assemblyFolderPath = Path.GetDirectoryName(thisAssembly.Location);
+
+            int lastBackslashIndex = assemblyFolderPath.LastIndexOf("\\");
+            string dllPath = assemblyFolderPath.Substring(0, lastBackslashIndex + 1) + "PluginInfoCollector\\PluginInfoCollector.dll";
+
+            Assembly assembly = Assembly.LoadFrom(dllPath);
+            Type type = assembly.GetType("PluginInfoCollector.InfoCollector");
+            var constructor = type.GetConstructor(new Type[] { typeof(string), typeof(string) });
+
+            if (type != null)
+            {
+                // Создание экземпляра класса
+                object instance = Activator.CreateInstance(type, new object[] { assemblyName, assemblyNameRus });
+            }
         }
     }
 }

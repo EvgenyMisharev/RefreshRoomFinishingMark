@@ -1,3 +1,3 @@
-Обновить марки\nотделки помещений
+Обновить\nмарки отделки
 Переносит значение ключей типов отделки в марку отделки помещений
 https://docs.google.com/document/d/1lxJeOdmZxhACgsct88r_UWiiWBD9gqzMm24bqbhBtYk/edit?usp=sharing
